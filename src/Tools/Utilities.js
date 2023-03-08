@@ -3,8 +3,7 @@
  * @license Apache 2.0
  * TenorJS - Lightweight NodeJS wrapper around the Tenor.com API.
  */
-const FS     = require("fs"),
-      roi    = require("roi"),
+const roi    = require("roi"),
       Path   = require("path"),
       HTTPS  = require("https"),
       Colors = require("colors"),
@@ -118,30 +117,30 @@ exports.generateAnon = function (Endpoint)
       });
 };
 
-exports.checkConfig = function (Creds)
-{
-      function writeConfig()
-      {
-            FS.writeFileSync(configFile, Creds, function (Error) {
-                  if (Error) throw Error;
-                  console.log(Colors.bold.green(`# [TenorJS] Changes have been made to the configuration file. Please restart.`));
-                  process.exit(1);
-            });
-      }
+// exports.checkConfig = function (Creds)
+// {
+//       function writeConfig()
+//       {
+//             FS.writeFileSync(configFile, Creds, function (Error) {
+//                   if (Error) throw Error;
+//                   console.log(Colors.bold.green(`# [TenorJS] Changes have been made to the configuration file. Please restart.`));
+//                   process.exit(1);
+//             });
+//       }
 
-      try
-      {
-            if (FS.existsSync(configFile))
-            {
-                  FS.readFile(configFile, "utf8", function (Error, Data) {
-                        if (Error) throw Error;
-                        if (Data !== Creds) writeConfig();
-                  });
-            } else { writeConfig(); }
-      } catch (E) {
-            throw E;
-      }
-};
+//       try
+//       {
+//             if (FS.existsSync(configFile))
+//             {
+//                   FS.readFile(configFile, "utf8", function (Error, Data) {
+//                         if (Error) throw Error;
+//                         if (Data !== Creds) writeConfig();
+//                   });
+//             } else { writeConfig(); }
+//       } catch (E) {
+//             throw E;
+//       }
+// };
 
 /**
  * Rudimentary version checking.

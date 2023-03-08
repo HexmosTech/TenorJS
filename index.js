@@ -38,7 +38,7 @@ exports.client = function (Credentials)
       /**
        * Check status of TenorJS config.
        */
-      Utilities.checkConfig(JSON.stringify(Credentials));
+      // Utilities.checkConfig(JSON.stringify(Credentials));
 
       return require("./src")(Credentials);
 };

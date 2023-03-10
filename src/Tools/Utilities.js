@@ -1,59 +1,59 @@
+const axios = require('axios');
 
 exports.callAPI = async function (path, callback) {
       try {
-            const response = await fetch(path);
-            const contentType = response.headers.get('content-type');
-            const code = response.status;
-
-            if (code !== 200) {
-                  const error = `# [TenorJS] Could not send request @ ${path} - Status Code: ${code}`;
-                  error.code = "ERR_REQ_SEND";
-                  callback(error);
-                  return;
+        const response = await axios.get(path);
+    
+        const contentType = response.headers['content-type'];
+        const code = response.status;
+    
+        if (code !== 200) {
+          const error = `# [TenorJS] Could not send request @ ${path} - Status Code: ${code}`;
+          error.code = "ERR_REQ_SEND";
+          callback(error);
+          return;
+        }
+    
+        if (contentType.indexOf('application/json') === -1) {
+          const error = `# [TenorJS] Content received isn't JSON. Type: ${contentType}`;
+          error.code = "ERR_RES_NOT";
+          callback(error);
+          return;
+        }
+    
+        let data, error = null, dForm;
+    
+        try {
+          /**
+           * Path checks.
+           */
+          if (path.includes("categories")) {
+            dForm = response.data.tags;
+          } else {
+            dForm = response.data.results;
+          }
+    
+          data = dForm;
+    
+          for (let data of Object.values(data)) {
+            if (!data.title) data.title = "Untitled";
+    
+            if (!path.includes("categories")) {
+              data.created_stamp = data.created;
+              // data.created = Moment.unix(data.created).format(require(configFile)["DateFormat"]);
             }
-
-            if (contentType.indexOf('application/json') === -1) {
-                  const error = `# [TenorJS] Content received isn't JSON. Type: ${contentType}`;
-                  error.code = "ERR_RES_NOT";
-                  callback(error);
-                  return;
-            }
-
-            const rawData = await response.text();
-            let data, error = null, dForm;
-
-            try {
-                  /**
-                   * Path checks.
-                   */
-                  if (path.includes("categories")) {
-                        dForm = JSON.parse(rawData).tags;
-                  } else {
-                        dForm = JSON.parse(rawData).results;
-                  }
-
-                  data = dForm;
-
-                  for (let data of Object.values(data)) {
-                        if (!data.title) data.title = "Untitled";
-
-                        if (!path.includes("categories")) {
-                              data.created_stamp = data.created;
-                              // data.created = Moment.unix(data.created).format(require(configFile)["DateFormat"]);
-                        }
-                  }
-            } catch (e) {
-                  error = "# [TenorJS] Failed to parse retrieved JSON.";
-                  error.code = 'ERR_JSON_PARSE';
-            }
-
-            callback(error, data);
+          }
+        } catch (e) {
+          error = "# [TenorJS] Failed to parse retrieved JSON.";
+          error.code = 'ERR_JSON_PARSE';
+        }
+    
+        callback(error, data);
       } catch (error) {
-            console.error(error);
-            callback(error);
+        console.error(error);
+        callback(error);
       }
-}
-
+    }
 
 exports.manageAPI = function (endpoint, callback, pResolve, pReject) {
       this.callAPI(endpoint, (error, result) => {

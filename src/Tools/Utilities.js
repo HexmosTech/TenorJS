@@ -1,5 +1,4 @@
 
-const fetch = import('node-fetch').then((module) => module.default);
 exports.callAPI = async function (path, callback) {
       try {
             const response = await fetch(path);

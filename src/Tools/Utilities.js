@@ -79,27 +79,3 @@ exports.generateAnon = function (endpoint) {
             JSON.parse(result).anon_id;
       });
 };
-
-
-exports.checkVersion = function () {
-      const Package = {
-            "Git": "https://raw.githubusercontent.com/Jinzulen/TenorJS/master/package.json",
-            "Home": require('../../package.json')["version"]
-      };
-
-      return RNFetchBlob.fetch('GET', Package["Git"])
-            .then(Response => {
-                  let Version = JSON.parse(Response.text()).version;
-
-                  if (Package["Home"] < Version) {
-                        console.error(`You are running an oudated version (v${Package["Home"]}) of TenorJS, v${Version} is available.\n
-    # NPM: https://www.npmjs.com/package/tenorjs
-    # GitHub: https://github.com/Jinzulen/TenorJS/
-    # Why you should upgrade: https://github.com/Jinzulen/TenorJS/blob/master/changelogs/${Version}.md`);
-
-
-                  }
-            })
-            .catch(console.error);
-};
-

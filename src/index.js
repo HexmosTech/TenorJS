@@ -8,10 +8,7 @@ module.exports = function (Credentials)
 {
       const Methods = {}, Utilities = require("./Tools/Utilities");
 
-      /**
-       * Check if the user is running an outdated version of TenorJS.
-       */
-      Utilities.checkVersion();
+   
 
       /**
        * Methods related to search querying.

@@ -1,83 +1,64 @@
-// import RNFetchBlob from 'rn-fetch-blob';
 
-const  Moment = require("moment"),
-      { get } = require('https');
+const fetch = import('node-fetch').then((module) => module.default);
+exports.callAPI = async function (path, callback) {
+      try {
+            const response = await fetch(path);
+            const contentType = response.headers.get('content-type');
+            const code = response.status;
 
-// const configFile = RNFS.DocumentDirectoryPath + "/tenor_config.json";
-//const configFile = RNFetchBlob.fs.dirs.DocumentDir + "/tenor_config.json";
-
-exports.callAPI = function (path, callback)
-{
-      get(path, (result) => {
-            let error, rawData = "";
-
-            const code = result.statusCode,
-                  type = result.headers["content-type"];
-
-            if (code !== 200)
-            {
-                  error      = `# [TenorJS] Could not send request @ ${path} - Status Code: ${code}`;
+            if (code !== 200) {
+                  const error = `# [TenorJS] Could not send request @ ${path} - Status Code: ${code}`;
                   error.code = "ERR_REQ_SEND";
-            }
-
-            if (type.indexOf("application/json") === -1)
-            {
-                  error      = `# [TenorJS] Content received isn't JSON. Type: ${type}`;
-                  error.code = "ERR_RES_NOT";
-            }
-
-            if (error)
-            {
-                  result.resume();
                   callback(error);
+                  return;
             }
 
-            result.setEncoding("utf8");
+            if (contentType.indexOf('application/json') === -1) {
+                  const error = `# [TenorJS] Content received isn't JSON. Type: ${contentType}`;
+                  error.code = "ERR_RES_NOT";
+                  callback(error);
+                  return;
+            }
 
-            result.on("data", function (buffer)
-            {
-                  rawData += buffer;
-            });
+            const rawData = await response.text();
+            let data, error = null, dForm;
 
-            result.on("end", () => {
-                  let data, error = null, dForm;
-
-                  try {
-                        /**
-                         * Path checks.
-                         */
-                        if (path.includes("categories")) {
-                              dForm = JSON.parse(rawData).tags;
-                        } else {
-                              dForm = JSON.parse(rawData).results;
-                        }
-
-                        data = dForm;
-
-                        for (let data of Object.values(data)) {
-                              if (!data.title) data.title = "Untitled";
-
-                              if (!path.includes("categories")) {
-                                    data.created_stamp = data.created;
-                                    // data.created = Moment.unix(data.created).format(require(configFile)["DateFormat"]);
-                              }
-                        }
-                  } catch (e) {
-                        error = "# [TenorJS] Failed to parse retrieved JSON.";
-                        error.code = 'ERR_JSON_PARSE';
+            try {
+                  /**
+                   * Path checks.
+                   */
+                  if (path.includes("categories")) {
+                        dForm = JSON.parse(rawData).tags;
+                  } else {
+                        dForm = JSON.parse(rawData).results;
                   }
 
-                  callback(error, data);
-            });
-      });
-};
+                  data = dForm;
+
+                  for (let data of Object.values(data)) {
+                        if (!data.title) data.title = "Untitled";
+
+                        if (!path.includes("categories")) {
+                              data.created_stamp = data.created;
+                              // data.created = Moment.unix(data.created).format(require(configFile)["DateFormat"]);
+                        }
+                  }
+            } catch (e) {
+                  error = "# [TenorJS] Failed to parse retrieved JSON.";
+                  error.code = 'ERR_JSON_PARSE';
+            }
+
+            callback(error, data);
+      } catch (error) {
+            console.error(error);
+            callback(error);
+      }
+}
 
 
-exports.manageAPI = function (endpoint, callback, pResolve, pReject)
-{
+exports.manageAPI = function (endpoint, callback, pResolve, pReject) {
       this.callAPI(endpoint, (error, result) => {
-            if (error)
-            {
+            if (error) {
                   if (typeof callback === "function") callback(error);
 
                   pReject(error);
@@ -92,10 +73,9 @@ exports.manageAPI = function (endpoint, callback, pResolve, pReject)
 };
 
 
-exports.generateAnon = function (endpoint)
-{
+exports.generateAnon = function (endpoint) {
       return this.callAPI(endpoint, (error, result) => {
-            if(error) console.error(error);
+            if (error) console.error(error);
 
             JSON.parse(result).anon_id;
       });
@@ -104,23 +84,23 @@ exports.generateAnon = function (endpoint)
 
 exports.checkVersion = function () {
       const Package = {
-        "Git": "https://raw.githubusercontent.com/Jinzulen/TenorJS/master/package.json",
-        "Home": require('../../package.json')["version"]
+            "Git": "https://raw.githubusercontent.com/Jinzulen/TenorJS/master/package.json",
+            "Home": require('../../package.json')["version"]
       };
-    
+
       return RNFetchBlob.fetch('GET', Package["Git"])
-        .then(Response => {
-          let Version = JSON.parse(Response.text()).version;
-    
-          if (Package["Home"] < Version) {
-            console.error(`You are running an oudated version (v${Package["Home"]}) of TenorJS, v${Version} is available.\n
+            .then(Response => {
+                  let Version = JSON.parse(Response.text()).version;
+
+                  if (Package["Home"] < Version) {
+                        console.error(`You are running an oudated version (v${Package["Home"]}) of TenorJS, v${Version} is available.\n
     # NPM: https://www.npmjs.com/package/tenorjs
     # GitHub: https://github.com/Jinzulen/TenorJS/
     # Why you should upgrade: https://github.com/Jinzulen/TenorJS/blob/master/changelogs/${Version}.md`);
-    
-         
-          }
-        })
-        .catch(console.error);
+
+
+                  }
+            })
+            .catch(console.error);
 };
-    
+
